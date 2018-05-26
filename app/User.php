@@ -91,9 +91,21 @@ class User extends Model implements AuthenticatableContract,
            // 未フォローであれば何もしない
            return false;
         }
-     }
+    }
 
-      public function is_following($userId) {
-         return $this->followings()->where('follow_id', $userId)->exists();
-      }
+    public function is_following($userId) {
+        return $this->followings()->where('follow_id', $userId)->exists();
+    }
+
+    public function feed_microposts()
+    {
+        $follow_user_ids = $this->followings()->lists('users.id')->toArray();
+        // $follow_user_ids = $this->followings()->lists('users.id');
+        // var_dump($follow_user_ids);
+        // $follow_user_ids = $follow_user_ids->toArray();
+        // var_dump($follow_user_ids);
+
+        $follow_user_ids[] = $this->id;
+        return Micropost::whereIn('user_id', $follow_user_ids);
+    }
 }
