@@ -55,9 +55,9 @@ class User extends Model implements AuthenticatableContract,
     public function follow($userId)
     { 
         // 既にフォローしているかの確認 
-    $exist = $this->is_following($userId); 
+        $exist = $this->is_following($userId); 
         // 自分自身ではないかの確認 
-    $its_me = $this->id == $userId;
+        $its_me = $this->id == $userId;
 
        if ($exist || $its_me) {
 
@@ -76,8 +76,8 @@ class User extends Model implements AuthenticatableContract,
          }
      }
 
-     public function unfollow($userId)
-     {
+    public function unfollow($userId)
+    {
         // 既にフォローしているかの確認
         $exist = $this->is_following($userId);
        // 自分自身ではないかの確認
@@ -108,4 +108,60 @@ class User extends Model implements AuthenticatableContract,
         $follow_user_ids[] = $this->id;
         return Micropost::whereIn('user_id', $follow_user_ids);
     }
+    
+    public function favorites()
+    {
+        return $this->belongsToMany(Micropost::class, 'user_favorite',  'user_id', 'micropost_id')->withTimestamps();
+    }
+
+    public function favorite($micropostId)
+    { 
+        // 既にお気に入りしているかの確認 
+        $exist = $this->is_favorites($micropostId); 
+
+       if ($exist) {
+          // 既にお気に入りしていれば何もしない
+          return false;
+        } else {
+           // 未お気に入りであればお気に入りする
+          $this->favorites()->attach($micropostId);
+           return true;
+
+         }
+     }
+
+    public function unfavorite($micropostId)
+    {
+        // var_dump('unfavorite -> '. $micropostId);
+
+        // 既にお気に入りしているかの確認
+        $exist = $this->is_favorites($micropostId);
+
+        // var_dump('exist -> '. $exist);
+        if ($exist) {
+          // 既にお気に入りしていればお気に入りを外す
+          $this->favorites()->detach($micropostId);
+          return true;
+        } else {
+           // 未お気に入りであれば何もしない
+           return false;
+        }
+    }
+    
+    public function is_favorites($micropostId)
+    {
+        // var_dump($this->favorites()); // テーブルの情報を表示
+        // var_dump($this->favorites()->first()); // 
+        // var_dump($this->favorites()->exists());
+        /**
+         * user_idカラム が ログインユーザID($this->id) で、
+         * micropost_id が 選択された投稿ID($micropostId) のデータが
+         * user_favoriteテーブルに存在するか
+         */
+        // 1. $this = ログインしているユーザー
+        // 2. favorites = ログインしているユーザーがお気に入りしているMicropost
+        // 3. where = 
+        return $this->favorites()->where('micropost_id', $micropostId)->exists();
+    }
+    
 }

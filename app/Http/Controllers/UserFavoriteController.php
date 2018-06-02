@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
-class WelcomeController extends Controller
+class UserFavoriteController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,21 +16,7 @@ class WelcomeController extends Controller
      */
     public function index()
     {
-        $data = [];
-        if (\Auth::check()) {
-            $user = \Auth::user();
-            $microposts = $user->feed_microposts()->orderBy('created_at', 'desc')->paginate(10);
-
-            $data = [
-                'user' => $user,
-                'microposts' => $microposts,
-            ];
-            
-            // ナビゲーションタブで表示するデータの各件数を取得してセットする
-            // （$count_microposts, $count_followings .. ）
-            $data += $this->counts($user); //バッチ
-        }
-        return view('welcome', $data);
+        //
     }
 
     /**
@@ -49,9 +35,10 @@ class WelcomeController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, $micropostId)
     {
-        //
+        \Auth::user()->favorite($micropostId);
+        return redirect()->back();
     }
 
     /**
@@ -94,8 +81,9 @@ class WelcomeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($micropostId)
     {
-        //
+        \Auth::user()->unfavorite($micropostId);
+        return redirect()->back();
     }
 }
